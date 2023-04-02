@@ -1,6 +1,4 @@
 import os
-import re
-import subprocess
 import torchvision.transforms.functional as TF
 import numpy as np
 import torch.nn
@@ -16,10 +14,9 @@ from noise_layers.dropout import Dropout
 from noise_layers.noiser import Noiser
 
 PTH_IMAGES_DIRECTORY = r'D:\Рабочий стол\10000test'
-PTH_SRC_IMG_FILE = r"D:\Рабочий стол\val2014\val2014\COCO_val2014_000000000073.jpg"
-PTH_OPTIONS_FILE = r"C:\Users\Pavel\PycharmProjects\HiDDeN_Ando\runs\run_with_noises_crop((0.2,0.3),(0.4,0.5))+cropout((0.11,0.22),(0.33,0.44))+dropout(0.55,0.6)+jpeg() 2023.03.03--14-10-28\options-and-config.pickle"
-PTH_CHCKPNT_FILE = r"C:\Users\Pavel\PycharmProjects\HiDDeN_Ando\runs\run_with_noises_crop((0.2,0.3),(0.4,0.5))+cropout((0.11,0.22),(0.33,0.44))+dropout(0.55,0.6)+jpeg() 2023.03.03--14-10-28\checkpoints\run_with_noises_crop((0.2,0.3),(0.4,0.5))+cropout((0.11,0.22),(0.33,0.44))+dropout(0.55,0.6)+jpeg()--epoch-300.pyt"
-NOISE_MODE = "dropout"  # crop cropout dropout and jpeg available
+PTH_OPTIONS_FILE = r"C:\Users\Pavel\PycharmProjects\HiDDeN_upd\runs\run_with_noises_crop((0.2,0.3),(0.4,0.5))+cropout((0.11,0.22),(0.33,0.44))+dropout(0.55,0.6)+jpeg() 2023.03.03--14-10-28\options-and-config.pickle"
+PTH_CHCKPNT_FILE = r"C:\Users\Pavel\PycharmProjects\HiDDeN_upd\runs\run_with_noises_crop((0.2,0.3),(0.4,0.5))+cropout((0.11,0.22),(0.33,0.44))+dropout(0.55,0.6)+jpeg() 2023.03.03--14-10-28\checkpoints\run_with_noises_crop((0.2,0.3),(0.4,0.5))+cropout((0.11,0.22),(0.33,0.44))+dropout(0.55,0.6)+jpeg()--epoch-300.pyt"
+NOISE_MODE = "cropout"  # crop cropout dropout jpeg and none  available
 
 # crop
 CROP_HEIGHT_RATIO_RANGE_MIN = 0.2
@@ -37,6 +34,11 @@ CROPOUT_WIDTH_RATIO_RANGE_MAX = 0.44
 DROPOUT_KEEP_RATIO_RANGE_MIN = 0.55
 DROPOUT_KEEP_RATIO_RANGE_MAX = 0.6
 
+NOISE_PARAM_1 = 0
+NOISE_PARAM_2 = 0
+NOISE_PARAM_3 = 0
+NOISE_PARAM_4 = 0
+
 def randomCrop(img, height, width):
     assert img.shape[0] >= height
     assert img.shape[1] >= width
@@ -51,7 +53,7 @@ def convert_msg_2_str(msg):
     return msg_str.replace('\n ', '')
 
 
-
+# PTH_SRC_IMG_FILE = r"D:\Рабочий стол\val2014\val2014\COCO_val2014_000000000073.jpg"
 # interpr_pth = r'D:\Games\Anaconda\envs\pytorchenv\python.exe'
 # script_name = 'test_copy.py'
 # src_img = '--source-image'
@@ -64,6 +66,7 @@ def convert_msg_2_str(msg):
 # subprocess.run([interpr_pth, script_name ,opts_file, opts_file_pth, chkpnt, chkpnt_pth , src_img, src_img_pth])
 
 def main():
+    global NOISE_PARAM_1, NOISE_PARAM_2, NOISE_PARAM_3, NOISE_PARAM_4
     datetime_date_str = str(datetime.datetime.now().date())
     datetime_time_str = str(datetime.datetime.now().time()).replace(" ", "")
     datetime_time_str = datetime_time_str.split(".")[0]
@@ -81,17 +84,37 @@ def main():
     if NOISE_MODE == "crop":
         crop = Crop((CROP_HEIGHT_RATIO_RANGE_MIN, CROP_HEIGHT_RATIO_RANGE_MAX), (CROP_WIDTH_RATIO_RANGE_MIN, CROP_WIDTH_RATIO_RANGE_MAX))
         noiser = Noiser([crop, ], device)
+        NOISE_PARAM_1 = CROP_HEIGHT_RATIO_RANGE_MIN
+        NOISE_PARAM_2 = CROP_HEIGHT_RATIO_RANGE_MAX
+        NOISE_PARAM_3 = CROP_WIDTH_RATIO_RANGE_MIN
+        NOISE_PARAM_4 = CROP_WIDTH_RATIO_RANGE_MAX
     if NOISE_MODE == "cropout":
         cropout = Cropout((CROPOUT_HEIGHT_RATIO_RANGE_MIN, CROPOUT_HEIGHT_RATIO_RANGE_MAX),
                     (CROPOUT_WIDTH_RATIO_RANGE_MIN, CROPOUT_WIDTH_RATIO_RANGE_MAX))
         noiser = Noiser([cropout, ], device)
+        NOISE_PARAM_1 = CROPOUT_HEIGHT_RATIO_RANGE_MIN
+        NOISE_PARAM_2 = CROPOUT_HEIGHT_RATIO_RANGE_MAX
+        NOISE_PARAM_3 = CROPOUT_WIDTH_RATIO_RANGE_MIN
+        NOISE_PARAM_4 = CROPOUT_WIDTH_RATIO_RANGE_MAX
     if NOISE_MODE == "dropout":
         dropout = Dropout((DROPOUT_KEEP_RATIO_RANGE_MIN, DROPOUT_KEEP_RATIO_RANGE_MAX))
         noiser = Noiser([dropout, ], device)
+        NOISE_PARAM_1 = DROPOUT_KEEP_RATIO_RANGE_MIN
+        NOISE_PARAM_2 = DROPOUT_KEEP_RATIO_RANGE_MAX
+        NOISE_PARAM_3 = "-"
+        NOISE_PARAM_4 = "-"
     if NOISE_MODE == "jpeg":
         noiser = Noiser(["JpegPlaceholder", ], device)
-
-
+        NOISE_PARAM_1 = "-"
+        NOISE_PARAM_2 = "-"
+        NOISE_PARAM_3 = "-"
+        NOISE_PARAM_4 = "-"
+    if NOISE_MODE == "none":
+        noiser = Noiser([], device)
+        NOISE_PARAM_1 = "-"
+        NOISE_PARAM_2 = "-"
+        NOISE_PARAM_3 = "-"
+        NOISE_PARAM_4 = "-"
 
     # noiser = Noiser(noise_config, device)
     checkpoint = torch.load(PTH_CHCKPNT_FILE)
@@ -154,7 +177,8 @@ def main():
     print(result)
 
     f = open(PTH_STATS_FILE, 'a')
-    f.write('NOISE TYPE ' + NOISE_MODE + '\n')
+    f.write('NOISE TYPE ' + NOISE_MODE + ' ' + str(NOISE_PARAM_1) + ' ' +
+            str(NOISE_PARAM_2) + ' ' + str(NOISE_PARAM_3) + ' ' + str(NOISE_PARAM_4)  + '\n')
     f.write('MATH EXPECTATION\n')
     f.write('{:.8f}'.format(result))
     f.close()
