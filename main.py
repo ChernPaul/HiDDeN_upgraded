@@ -20,7 +20,7 @@ from train import train
 
 def main():
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-
+    print(torch.__version__)
     parent_parser = argparse.ArgumentParser(description='Training of HiDDeN nets')
     subparsers = parent_parser.add_subparsers(dest='command', help='Sub-parser for commands')
     new_run_parser = subparsers.add_parser('new', help='starts a new run')

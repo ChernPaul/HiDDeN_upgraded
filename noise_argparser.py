@@ -2,12 +2,15 @@ import argparse
 import re
 from noise_layers.cropout import Cropout
 from noise_layers.crop import Crop
+
 from noise_layers.identity import Identity
 from noise_layers.dropout import Dropout
 from noise_layers.resize import Resize
 from noise_layers.quantization import Quantization
 from noise_layers.jpeg_compression import JpegCompression
 
+from noise_layers.sharp import Sharp
+from noise_layers.gauss_blur import Gauss_blur
 
 def parse_pair(match_groups):
     heights = match_groups[0].split(',')
@@ -43,6 +46,21 @@ def parse_resize(resize_command):
     min_ratio = float(ratios[0])
     max_ratio = float(ratios[1])
     return Resize((min_ratio, max_ratio))
+
+# оставляем фиктивным сигма 2 дабы не особо париться
+def parse_gauss(gauss_command):
+    matches = re.match(r'gauss\(\((\d+\.*\d*,\d+\.*\d*)\),\((\d+\.*\d*,\d+\.*\d*)\)\)', gauss_command)
+    (kernel_h, kernel_w), (sigma1, sigma2) = parse_pair(matches.groups())
+    return Gauss_blur((kernel_h, kernel_w), sigma1)
+
+
+def parse_sharp(sharp_command):
+    matches = re.match(r'sharp\((\d+\.*\d*,\d+\.*\d*,\d+\.*\d*)\)', sharp_command)
+    params = matches.groups()[0].split(',')
+    radius = float(params[0])
+    percent = float(params[1])
+    threshold = float(params[2])
+    return Sharp(radius, percent, threshold)
 
 
 class NoiseArgParser(argparse.Action):
@@ -99,9 +117,14 @@ class NoiseArgParser(argparse.Action):
                 layers.append('JpegPlaceholder')
             elif command[:len('quant')] == 'quant':
                 layers.append('QuantizationPlaceholder')
+            elif command[:len('gauss')] == 'gauss':
+                layers.append(parse_gauss(command))
+            elif command[:len('sharp')] == 'sharp':
+                layers.append(parse_sharp(command))
             elif command[:len('identity')] == 'identity':
                 # We are adding one Identity() layer in Noiser anyway
                 pass
+
             else:
                 raise ValueError('Command not recognized: \n{}'.format(command))
         setattr(namespace, self.dest, layers)
