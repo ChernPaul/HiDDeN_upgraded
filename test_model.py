@@ -7,7 +7,7 @@ from PIL import Image
 import utils
 import os
 from model.hidden import *
-from noise_layers.crop import Crop
+from noise_layers.crop import Crop, get_random_rectangle_inside
 from noise_layers.cropout import Cropout
 from noise_layers.dropout import Dropout
 from noise_layers.identity import Identity
@@ -43,17 +43,27 @@ def randomCrop(img, height, width):
     assert img.shape[1] >= width
     x = np.random.randint(0, img.shape[1] - width)
     y = np.random.randint(0, img.shape[0] - height)
-    img = img[y:y+height, x:x+width]
+    img = img[y:y + height, x:x + width]
     return img
 
 # for testing my implementation
 def centerCrop(img, height, width):
     assert img.shape[0] >= height
     assert img.shape[1] >= width
-    x = img.shape[1]//2
-    y = img.shape[0]//2
-    img = img[y-height//2:y+height//2, x-width//2:x+width//2]
+    x = img.shape[1] // 2
+    y = img.shape[0] // 2
+    img = img[y - height // 2:y + height // 2, x - width // 2:x + width // 2]
     return img
+
+
+def crop_for_diff_image(noised_and_cover, height_ratio_range, width_ratio_range):
+    noised_image = noised_and_cover[0]
+    # crop_rectangle is in form (from, to) where @from and @to are 2D points -- (height, width)
+    h_start, h_end, w_start, w_end = get_random_rectangle_inside(noised_image, height_ratio_range, width_ratio_range)
+    zero_image = np.zeros(np.shape(noised_image))
+    zero_image[:, :, h_start: h_end, w_start: w_end] = noised_image[:, :, h_start: h_end, w_start: w_end]
+    noised_and_cover[0] = zero_image
+    return noised_and_cover
 
 
 def create_diff_image(encoded_images, noised_images, filename):
@@ -141,7 +151,7 @@ def main():
 
     # for t in range(args.times):
     message = torch.Tensor(np.random.choice([0, 1], (image_tensor.shape[0],
-                                                    hidden_config.message_length))).to(device)
+                                                     hidden_config.message_length))).to(device)
 
     losses, (encoded_images, noised_images, decoded_messages) = hidden_net.validate_on_batch([image_tensor, message])
     decoded_rounded = decoded_messages.detach().cpu().numpy().round().clip(0, 1)
@@ -151,14 +161,12 @@ def main():
     print('error : {:.3f}'.format(np.mean(np.abs(decoded_rounded - message_detached))))
 
 
-
     create_diff_image(encoded_images, noised_images, PTH_TO_SAVE_IMG)
 
     # utils.save_images(image_tensor.cpu(), noised_images.cpu(), 'test' + str(datetime.datetime.now().date()) +
     #                   datetime_time_str, PTH_TO_SAVE_IMG, resize_to=(256, 256))
 
     # bitwise_avg_err = np.sum(np.abs(decoded_rounded - message.detach().cpu().numpy()))/(image_tensor.shape[0] * messages.shape[1])
-
 
 
 if __name__ == '__main__':

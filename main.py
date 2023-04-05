@@ -14,9 +14,8 @@ from noise_argparser import NoiseArgParser
 
 from train import train
 
-# new --name noise_crop((0.2,0.3),(0.4,0.5))+cropout((0.11,0.22),(0.33,0.44))+dropout(0.55,0.6)+jpeg() --data-dir "C:\Users\Pavel\PycharmProjects\HiDDeN_Ando\folder" --batch-size 12 --noise "crop((0.2,0.3),(0.4,0.5))+cropout((0.11,0.22),(0.33,0.44))+dropout(0.55,0.6)+jpeg()"
-# continue --folder "C:\Users\Pavel\PycharmProjects\HiDDeN_Ando\runs\noise_crop((0.2,0.3),(0.4,0.5))+cropout((0.11,0.22),(0.33,0.44))+dropout(0.55,0.6)+jpeg() 2023.03.27--15-15-17"
-
+# new --name rwn_crop+cropout+dropout+jpeg() --data-dir "D:\Рабочий стол\folder" --batch-size 12 --noise "crop((0.2,0.3),(0.4,0.5))+cropout((0.11,0.22),(0.33,0.44))+dropout(0.55,0.6)+jpeg()"
+# continue --folder "C:\Users\Pavel\PycharmProjects\HiDDeN_upd\runs\rwn_crop+cropout+dropout+jpeg 2023.04.04--23-26-36"
 
 def main():
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
