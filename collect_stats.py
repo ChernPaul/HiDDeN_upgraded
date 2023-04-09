@@ -12,12 +12,13 @@ from noise_layers.crop import Crop
 from noise_layers.cropout import Cropout
 from noise_layers.dropout import Dropout
 from noise_layers.noiser import Noiser
+from test_model import centerCrop
 
 PTH_IMAGES_DIRECTORY = r'D:\Рабочий стол\10000test'
 # PTH_SRC_IMG_FILE = r"D:\Рабочий стол\val2014\val2014\COCO_val2014_000000000073.jpg"
-PTH_OPTIONS_FILE = r"C:\Users\Pavel\PycharmProjects\HiDDeN_upd\runs\run_with_noises_crop((0.2,0.3),(0.4,0.5))+cropout((0.11,0.22),(0.33,0.44))+dropout(0.55,0.6)+jpeg() 2023.03.03--14-10-28\options-and-config.pickle"
-PTH_CHCKPNT_FILE = r"C:\Users\Pavel\PycharmProjects\HiDDeN_upd\runs\run_with_noises_crop((0.2,0.3),(0.4,0.5))+cropout((0.11,0.22),(0.33,0.44))+dropout(0.55,0.6)+jpeg() 2023.03.03--14-10-28\checkpoints\run_with_noises_crop((0.2,0.3),(0.4,0.5))+cropout((0.11,0.22),(0.33,0.44))+dropout(0.55,0.6)+jpeg()--epoch-300.pyt"
-NOISE_MODE = "jpeg"  # identity crop cropout dropout and jpeg are available
+PTH_OPTIONS_FILE = r"C:\Users\Pavel\PycharmProjects\HiDDeN_upd\runs\rwn_crop+cropout+dropout+jpeg() 2023.04.07--09-24-43\options-and-config.pickle"
+PTH_CHCKPNT_FILE = r"C:\Users\Pavel\PycharmProjects\HiDDeN_upd\runs\rwn_crop+cropout+dropout+jpeg() 2023.04.07--09-24-43\checkpoints\rwn_crop+cropout+dropout+jpeg()--epoch-300.pyt"
+NOISE_MODE = "identity"  # identity crop cropout dropout and jpeg are available
 
 # crop
 CROP_HEIGHT_RATIO_RANGE_MIN = 0.2
@@ -124,10 +125,12 @@ def main():
         try:
             image = randomCrop(np.array(image_pil), hidden_config.H, hidden_config.W)
         except AssertionError:
+            # print(src_img_pth)
             continue
         try:
             image_tensor = TF.to_tensor(image).to(device)
         except ValueError:
+            # print(src_img_pth)
             continue
         image_tensor = image_tensor * 2 - 1  # transform from [0, 1] to [-1, 1]
         image_tensor.unsqueeze_(0)

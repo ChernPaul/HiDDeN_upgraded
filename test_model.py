@@ -14,8 +14,8 @@ from noise_layers.identity import Identity
 from noise_layers.noiser import Noiser
 
 # --source-image "D:\Рабочий стол\val2014\val2014\COCO_val2014_000000000073"
-# --options-file "C:\Users\Pavel\PycharmProjects\HiDDeN_Ando\runs\run_with_noises_crop((0.2,0.3),(0.4,0.5))+cropout((0.11,0.22),(0.33,0.44))+dropout(0.55,0.6)+jpeg() 2023.03.03--14-10-28\options-and-config.pickle"
-# --checkpoint-file "C:\Users\Pavel\PycharmProjects\HiDDeN_Ando\runs\run_with_noises_crop((0.2,0.3),(0.4,0.5))+cropout((0.11,0.22),(0.33,0.44))+dropout(0.55,0.6)+jpeg() 2023.03.03--14-10-28\checkpoints\run_with_noises_crop((0.2,0.3),(0.4,0.5))+cropout((0.11,0.22),(0.33,0.44))+dropout(0.55,0.6)+jpeg()--epoch-300.pyt"
+# --options-file "C:\Users\Pavel\PycharmProjects\HiDDeN_upd\runs\rwn_crop+cropout+dropout+jpeg 2023.04.04--23-26-36\options-and-config.pickle"
+# --checkpoint-file "C:\Users\Pavel\PycharmProjects\HiDDeN_upd\runs\rwn_crop+cropout+dropout+jpeg 2023.04.04--23-26-36\checkpoints\rwn_crop+cropout+dropout+jpeg--epoch-300.pyt"
 
 PTH_TO_SAVE_IMG = r"D:\Рабочий стол"
 
@@ -23,10 +23,10 @@ DIFF_IMAGE_MULTIPLAYER = 10
 MAX_PIXEL_VALUE = 255
 MIN_PIXEL_VALUE = 0
 # crop
-CROP_HEIGHT_RATIO_RANGE_MIN = 0.2
-CROP_HEIGHT_RATIO_RANGE_MAX = 0.3
-CROP_WIDTH_RATIO_RANGE_MIN = 0.4
-CROP_WIDTH_RATIO_RANGE_MAX = 0.5
+CROP_HEIGHT_RATIO_RANGE_MIN = 0.5
+CROP_HEIGHT_RATIO_RANGE_MAX = 0.6
+CROP_WIDTH_RATIO_RANGE_MIN = 0.5
+CROP_WIDTH_RATIO_RANGE_MAX = 0.6
 
 # cropout
 CROPOUT_HEIGHT_RATIO_RANGE_MIN = 0.11
@@ -46,7 +46,7 @@ def randomCrop(img, height, width):
     img = img[y:y + height, x:x + width]
     return img
 
-# for testing my implementation
+# for testing, my implementation
 def centerCrop(img, height, width):
     assert img.shape[0] >= height
     assert img.shape[1] >= width
@@ -56,17 +56,31 @@ def centerCrop(img, height, width):
     return img
 
 
-def crop_for_diff_image(noised_and_cover, height_ratio_range, width_ratio_range):
-    noised_image = noised_and_cover[0]
-    # crop_rectangle is in form (from, to) where @from and @to are 2D points -- (height, width)
-    h_start, h_end, w_start, w_end = get_random_rectangle_inside(noised_image, height_ratio_range, width_ratio_range)
-    zero_image = np.zeros(np.shape(noised_image))
-    zero_image[:, :, h_start: h_end, w_start: w_end] = noised_image[:, :, h_start: h_end, w_start: w_end]
-    noised_and_cover[0] = zero_image
-    return noised_and_cover
+def create_buffer_crop(encoded_images, noised_images):
+    dif_height = encoded_images.shape[2] - noised_images.shape[2]
+    dif_width = encoded_images.shape[3] - noised_images.shape[3]
+    left_upper_position = (0, 0)
+    np_en_image = utils.tensor_to_image(encoded_images)
+    np_noise_image = utils.tensor_to_image(noised_images)
+
+    for i in range(0, dif_height, 1):
+        for j in range(0, dif_width, 1):
+            if np.array_equal(np_en_image[0, i, j:j+np_noise_image.shape[2], 0], np_noise_image[0, 0, :, 0]):
+                left_upper_position = (i, j)
+                break
+
+    new_noised = np.zeros((1, encoded_images.shape[2], encoded_images.shape[3], 3))
+    new_noised[0,
+               left_upper_position[0]:left_upper_position[0] + np_noise_image.shape[1],
+               left_upper_position[1]:left_upper_position[1] + np_noise_image.shape[2],
+               :] = np_noise_image[:, :, :, :]
+
+    new_noised = np.squeeze(new_noised, 0)
+    new_noised = utils.image_to_tensor(new_noised)
+    return new_noised
 
 
-def create_diff_image(encoded_images, noised_images, filename):
+def create_diff_image(source_image, encoded_images, noised_images, filename):
     np_en_image = utils.tensor_to_image(encoded_images)
     np_noise_image = utils.tensor_to_image(noised_images)
 
@@ -81,7 +95,7 @@ def create_diff_image(encoded_images, noised_images, filename):
 
     diff_image = np.squeeze(diff_image, 0)
     diff_tensor = utils.image_to_tensor(diff_image)
-    stacked_images = torch.cat([encoded_images.cpu(), noised_images.cpu(), diff_tensor.cpu()], dim=0)
+    stacked_images = torch.cat([source_image.cpu(), encoded_images.cpu(), noised_images.cpu(), diff_tensor.cpu()], dim=0)
 
     # create path and filename with actual time
     datetime_date_str = str(datetime.datetime.now().date())
@@ -114,13 +128,13 @@ def main():
 
     train_options, hidden_config, noise_config = utils.load_options(args.options_file)
 
-    crop = Crop((CROP_HEIGHT_RATIO_RANGE_MIN, CROP_HEIGHT_RATIO_RANGE_MAX),
-                (CROP_WIDTH_RATIO_RANGE_MIN, CROP_WIDTH_RATIO_RANGE_MAX))
-    noiser = Noiser([crop, ], device)
+    # crop = Crop((CROP_HEIGHT_RATIO_RANGE_MIN, CROP_HEIGHT_RATIO_RANGE_MAX),
+    #             (CROP_WIDTH_RATIO_RANGE_MIN, CROP_WIDTH_RATIO_RANGE_MAX))
+    # noiser = Noiser([crop, ], device)
 
-    # cropout = Cropout((CROPOUT_HEIGHT_RATIO_RANGE_MIN, CROPOUT_HEIGHT_RATIO_RANGE_MAX),
-    #                   (CROPOUT_WIDTH_RATIO_RANGE_MIN, CROPOUT_WIDTH_RATIO_RANGE_MAX))
-    # noiser = Noiser([cropout, ], device)
+    cropout = Cropout((CROPOUT_HEIGHT_RATIO_RANGE_MIN, CROPOUT_HEIGHT_RATIO_RANGE_MAX),
+                      (CROPOUT_WIDTH_RATIO_RANGE_MIN, CROPOUT_WIDTH_RATIO_RANGE_MAX))
+    noiser = Noiser([cropout, ], device)
 
     # dropout = Dropout((DROPOUT_KEEP_RATIO_RANGE_MIN, DROPOUT_KEEP_RATIO_RANGE_MAX))
     # noiser = Noiser([dropout, ], device)
@@ -160,8 +174,9 @@ def main():
     print('decoded : {}'.format(decoded_rounded))
     print('error : {:.3f}'.format(np.mean(np.abs(decoded_rounded - message_detached))))
 
-
-    create_diff_image(encoded_images, noised_images, PTH_TO_SAVE_IMG)
+    # only for crop
+    # noised_images = create_buffer_crop(encoded_images, noised_images)
+    create_diff_image(image_tensor, encoded_images, noised_images, PTH_TO_SAVE_IMG)
 
     # utils.save_images(image_tensor.cpu(), noised_images.cpu(), 'test' + str(datetime.datetime.now().date()) +
     #                   datetime_time_str, PTH_TO_SAVE_IMG, resize_to=(256, 256))

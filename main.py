@@ -14,8 +14,8 @@ from noise_argparser import NoiseArgParser
 
 from train import train
 
-# new --name rwn_crop+cropout+dropout+jpeg() --data-dir "D:\Рабочий стол\folder" --batch-size 12 --noise "crop((0.2,0.3),(0.4,0.5))+cropout((0.11,0.22),(0.33,0.44))+dropout(0.55,0.6)+jpeg()"
-# continue --folder "C:\Users\Pavel\PycharmProjects\HiDDeN_upd\runs\rwn_crop+cropout+dropout+jpeg 2023.04.04--23-26-36"
+# new --name rwn_crop+cropout+dropout+jpeg --data-dir "D:\Рабочий стол\folder" --batch-size 8 --size 128 --message 32
+# continue --folder "C:\Users\Pavel\PycharmProjects\HiDDeN_upd\runs\rwn_crop+cropout+dropout+jpeg 2023.04.07--09-24-43"
 
 def main():
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -93,8 +93,8 @@ def main():
         noise_config = args.noise if args.noise is not None else []
         hidden_config = HiDDenConfiguration(H=args.size, W=args.size,
                                             message_length=args.message,
-                                            encoder_blocks=5, encoder_channels=64,
-                                            decoder_blocks=8, decoder_channels=64,
+                                            encoder_blocks=4, encoder_channels=64,
+                                            decoder_blocks=7, decoder_channels=64,
                                             use_discriminator=True,
                                             use_vgg=False,
                                             discriminator_blocks=3, discriminator_channels=64,
