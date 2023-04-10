@@ -51,8 +51,10 @@ def randomCrop(img, height, width):
 
 
 def convert_msg_2_str(msg):
+    msg = msg.astype(int)
+    msg = np.squeeze(msg, 0)
     msg_str = str(msg)
-    return msg_str.replace('\n ', '')
+    return msg_str.replace('\n ', ' ')
 
 
 def main():
@@ -173,6 +175,7 @@ def main():
     print(result)
 
     f = open(PTH_STATS_FILE, 'a')
+    f.write('DATA_BLOCK_FINISHED' + '\n')
     f.write('NOISE TYPE ' + NOISE_MODE + ' ' + str(NOISE_PARAM_1) + ' ' +
             str(NOISE_PARAM_2) + ' ' + str(NOISE_PARAM_3) + ' ' + str(NOISE_PARAM_4) + '\n')
     f.write('MATH EXPECTATION\n')
