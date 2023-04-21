@@ -39,8 +39,16 @@ def train(model: Hidden,
     print_each = 10
     images_to_save = 8
     saved_images_size = (512, 512)
-
+    # early stopping
+    last_loss = 100
+    # loss min difference value
+    delta = 0.0001
+    # trigger times >= patience
+    patience = 10
+    seq_trigger_times = 0
+    # early stopping
     for epoch in range(train_options.start_epoch, train_options.number_of_epochs + 1):
+
         logging.info('\nStarting epoch {}/{}'.format(epoch, train_options.number_of_epochs))
         logging.info('Batch size = {}\nSteps in epoch = {}'.format(train_options.batch_size, steps_in_epoch))
         training_losses = defaultdict(AverageMeter)
@@ -91,6 +99,21 @@ def train(model: Hidden,
                                   os.path.join(this_run_folder, 'images'), resize_to=saved_images_size)
                 first_iteration = False
 
+        # early stopping block started
+        current_loss = validation_losses['loss           '].avg
+        print('The current loss:', current_loss)
+        # last - current > delta means improvement
+        if last_loss - current_loss <= delta:
+            seq_trigger_times += 1
+            print('trigger times:', seq_trigger_times)
+            if seq_trigger_times >= patience:
+                print('Early stopping!\n')
+                break
+        else:
+            seq_trigger_times = 0
+        # set current loss as last lost for next step
+        last_loss = current_loss
+        # early stopping block ended
         utils.log_progress(validation_losses)
         logging.info('-' * 40)
         utils.save_checkpoint(model, train_options.experiment_name, epoch, os.path.join(this_run_folder, 'checkpoints'))
