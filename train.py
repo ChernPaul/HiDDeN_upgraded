@@ -42,10 +42,13 @@ def train(model: Hidden,
     # early stopping
     last_loss = 100
     # loss min difference value
-    delta = 0.0001
+    delta = 0.001
     # trigger times >= patience
-    patience = 10
-    seq_trigger_times = 0
+    patience_abs = 10
+    patience_improve = 10
+    seq_trigger_times_abs = 0
+    seq_trigger_times_imp = 0
+    min_loss_value = 100
     # early stopping
     for epoch in range(train_options.start_epoch, train_options.number_of_epochs + 1):
 
@@ -104,15 +107,26 @@ def train(model: Hidden,
         print('The current loss:', current_loss)
         # last - current > delta means improvement
         if last_loss - current_loss <= delta:
-            seq_trigger_times += 1
-            print('trigger times:', seq_trigger_times)
-            if seq_trigger_times >= patience:
+            seq_trigger_times_abs += 1
+            print('trigger times:', seq_trigger_times_abs)
+            if seq_trigger_times_abs >= patience_abs:
                 print('Early stopping!\n')
                 break
         else:
-            seq_trigger_times = 0
+            seq_trigger_times_abs = 0
+
+        if min_loss_value < current_loss:
+            seq_trigger_times_imp += 1
+            if seq_trigger_times_imp >= patience_improve:
+                print('Early stopping!\n')
+                break
+        else:
+            seq_trigger_times_imp = 0
+            min_loss_value = current_loss
+
         # set current loss as last lost for next step
         last_loss = current_loss
+
         # early stopping block ended
         utils.log_progress(validation_losses)
         logging.info('-' * 40)
