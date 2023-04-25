@@ -9,7 +9,6 @@ from torchvision.transforms.functional import to_pil_image
 from collections.abc import Sequence
 
 
-
 # class GaussianBlur(torch.nn.Module):
 #     """Blurs image with randomly chosen Gaussian blur.
 #     If the image is torch Tensor, it is expected
@@ -100,21 +99,6 @@ from collections.abc import Sequence
 #             raise ValueError(f"{name} should be a sequence of length {msg}.")
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #
 # def gaussian_blur(img: Tensor, kernel_size, sigma):
 #     if not isinstance(kernel_size, (int, list, tuple)):
@@ -150,11 +134,6 @@ from collections.abc import Sequence
 #         output = to_pil_image(output, mode=img.mode)
 #     return output
 
-
-
-
-
-
 class Gauss_blur(nn.Module):
     def __init__(self, kernel_size, sigma_param):
         super(Gauss_blur, self).__init__()
@@ -163,6 +142,4 @@ class Gauss_blur(nn.Module):
 
     def forward(self, noised_and_cover):
         noised_image = noised_and_cover[0]
-
-
         return noised_and_cover

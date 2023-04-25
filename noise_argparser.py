@@ -5,6 +5,7 @@ from noise_layers.crop import Crop
 
 from noise_layers.identity import Identity
 from noise_layers.dropout import Dropout
+from noise_layers.median import Median
 from noise_layers.resize import Resize
 from noise_layers.quantization import Quantization
 from noise_layers.jpeg_compression import JpegCompression
@@ -47,11 +48,14 @@ def parse_resize(resize_command):
     max_ratio = float(ratios[1])
     return Resize((min_ratio, max_ratio))
 
-# оставляем фиктивным сигма 2 дабы не особо париться
+
 def parse_gauss(gauss_command):
-    matches = re.match(r'gauss\(\((\d+\.*\d*,\d+\.*\d*)\),\((\d+\.*\d*,\d+\.*\d*)\)\)', gauss_command)
-    (kernel_h, kernel_w), (sigma1, sigma2) = parse_pair(matches.groups())
-    return Gauss_blur((kernel_h, kernel_w), sigma1)
+    matches = re.match(r'gauss\((\d+\.*\d*,\d+\.*\d*,\d+\.*\d*)\)', gauss_command)
+    params = matches.groups()[0].split(',')
+    kernel_h = int(params[0])
+    kernel_w = int(params[1])
+    sigma = int(params[2])
+    return Gauss_blur((kernel_h, kernel_w), sigma)
 
 
 def parse_sharp(sharp_command):
@@ -62,6 +66,12 @@ def parse_sharp(sharp_command):
     threshold = float(params[2])
     return Sharp(radius, percent, threshold)
 
+
+def parse_median(median_command):
+    matches = re.match(r'median\((\d+\.*\d*)\)', median_command)
+    params = matches.groups()[0]
+    kernel_size = int(params[0])
+    return Median(kernel_size)
 
 class NoiseArgParser(argparse.Action):
     def __init__(self,
@@ -121,6 +131,8 @@ class NoiseArgParser(argparse.Action):
                 layers.append(parse_gauss(command))
             elif command[:len('sharp')] == 'sharp':
                 layers.append(parse_sharp(command))
+            elif command[:len('median')] == 'median':
+                layers.append(parse_median(command))
             elif command[:len('identity')] == 'identity':
                 # We are adding one Identity() layer in Noiser anyway
                 pass

@@ -35,13 +35,6 @@ class Sharp(nn.Module):
         self.percent = percent
         self.threshold = threshold
 
-
-
-
     def forward(self, noised_and_cover):
         noised_image = noised_and_cover[0]
-
-
-
-
         return noised_and_cover
