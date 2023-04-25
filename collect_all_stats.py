@@ -15,14 +15,16 @@ from noise_layers.cropout import Cropout
 from noise_layers.dropout import Dropout
 from noise_layers.noiser import Noiser
 from test_model import centerCrop
+ARCH_NUMBER = '2'
+MSG_LEN = '96'
 
 # PTH_IMAGES_DIRECTORY = r'D:\Рабочий стол\10000test'
 PTH_IMAGES_DIRECTORY = r'D:\Рабочий стол\1000test'
-ADD_TO_TITLE = "msg_64_a2_1000_"
-PTH_OPTIONS_FILE = r"D:\Рабочий стол\exp1_data\arch2\options-and-config_msg64_arch2.pickle"
-PTH_CHCKPNT_FILE = r"D:\Рабочий стол\exp1_data\arch2\identity_msg64--epoch-300.pyt"
+ADD_TO_TITLE = "msg_" + MSG_LEN + "_a" + ARCH_NUMBER + "_1000_"
+PTH_OPTIONS_FILE = r"D:\Рабочий стол\exp1_data\arch" + ARCH_NUMBER + "\options-and-config_msg" + MSG_LEN + "_arch" + ARCH_NUMBER + ".pickle"
+PTH_CHCKPNT_FILE = r"D:\Рабочий стол\exp1_data\arch" + ARCH_NUMBER + "\identity_msg" + MSG_LEN + "--epoch-300.pyt"
 NOISE_MODE = "identity"  # identity crop cropout dropout and jpeg are available
-# PTH_SRC_IMG_FILE = r"D:\Рабочий стол\val2014\val2014\COCO_val2014_000000000073.jpg"
+
 
 # crop
 CROP_HEIGHT_RATIO_RANGE_MIN = 0.2
@@ -285,6 +287,8 @@ def main():
     f.write("DATA_BLOCK_FINISHED" + '\n')
     f.write('NOISE TYPE ' + NOISE_MODE + ' ' + str(NOISE_PARAM_1) + ' ' +
             str(NOISE_PARAM_2) + ' ' + str(NOISE_PARAM_3) + ' ' + str(NOISE_PARAM_4) + '\n')
+    f.write('Images evaluated\n')
+    f.write('{:.3f}'.format(msg_counter) + '\n')
     f.write('BER MATH EXPECTATION\n')
     f.write('{:.8f}'.format(ber_result))
     f.close()
@@ -294,6 +298,8 @@ def main():
     f.write("DATA_BLOCK_FINISHED" + '\n')
     f.write('NOISE TYPE ' + NOISE_MODE + ' ' + str(NOISE_PARAM_1) + ' ' +
             str(NOISE_PARAM_2) + ' ' + str(NOISE_PARAM_3) + ' ' + str(NOISE_PARAM_4) + '\n')
+    f.write('Images evaluated\n')
+    f.write('{:.3f}'.format(msg_counter) + '\n')
     f.write('LOSS MATH EXPECTATION\n')
     f.write('{:.8f}'.format(loss_result))
     f.close()
@@ -303,6 +309,8 @@ def main():
     f.write("DATA_BLOCK_FINISHED" + '\n')
     f.write('NOISE TYPE ' + NOISE_MODE + ' ' + str(NOISE_PARAM_1) + ' ' +
             str(NOISE_PARAM_2) + ' ' + str(NOISE_PARAM_3) + ' ' + str(NOISE_PARAM_4) + '\n')
+    f.write('Images evaluated\n')
+    f.write('{:.3f}'.format(msg_counter) + '\n')
     f.write('PSNR MATH EXPECTATION\n')
     f.write('{:.8f}'.format(psnr_result))
     f.close()
@@ -312,6 +320,8 @@ def main():
     f.write("DATA_BLOCK_FINISHED" + '\n')
     f.write('NOISE TYPE ' + NOISE_MODE + ' ' + str(NOISE_PARAM_1) + ' ' +
             str(NOISE_PARAM_2) + ' ' + str(NOISE_PARAM_3) + ' ' + str(NOISE_PARAM_4) + '\n')
+    f.write('Images evaluated\n')
+    f.write('{:.3f}'.format(msg_counter) + '\n')
     f.write('SSIM MATH EXPECTATION\n')
     f.write('{:.8f}'.format(ssim_result))
     f.close()
