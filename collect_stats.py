@@ -14,13 +14,17 @@ from noise_layers.dropout import Dropout
 from noise_layers.noiser import Noiser
 from test_model import centerCrop
 
-PTH_IMAGES_DIRECTORY = r'D:\Рабочий стол\10000test'
-# PTH_SRC_IMG_FILE = r"D:\Рабочий стол\val2014\val2014\COCO_val2014_000000000073.jpg"
-PTH_OPTIONS_FILE = r"C:\Users\Pavel\PycharmProjects\HiDDeN_upd\runs\rwn_crop+cropout+dropout+jpeg() 2023.04.07--09-24-43\options-and-config.pickle"
-PTH_CHCKPNT_FILE = r"C:\Users\Pavel\PycharmProjects\HiDDeN_upd\runs\rwn_crop+cropout+dropout+jpeg() 2023.04.07--09-24-43\checkpoints\rwn_crop+cropout+dropout+jpeg()--epoch-300.pyt"
-NOISE_MODE = "identity"  # identity crop cropout dropout and jpeg are available
+# PTH_IMAGES_DIRECTORY = r'D:\Рабочий стол\10000test'
+PTH_IMAGES_DIRECTORY = r'D:\Рабочий стол\1000test'
 
-# crop
+ADD_TO_TITLE = "msg_64_a4_1000_"
+
+PTH_OPTIONS_FILE = r"D:\Рабочий стол\exp1_data\arch4\options-and-config_msg64_arch4.pickle"
+PTH_CHCKPNT_FILE = r"D:\Рабочий стол\exp1_data\arch4\identity_msg64--epoch-300.pyt"
+NOISE_MODE = "identity"  # identity crop cropout dropout and jpeg are available
+# PTH_SRC_IMG_FILE = r"D:\Рабочий стол\val2014\val2014\COCO_val2014_000000000073.jpg"
+
+
 CROP_HEIGHT_RATIO_RANGE_MIN = 0.2
 CROP_HEIGHT_RATIO_RANGE_MAX = 0.3
 CROP_WIDTH_RATIO_RANGE_MIN = 0.4
@@ -63,7 +67,7 @@ def main():
     datetime_time_str = str(datetime.datetime.now().time()).replace(" ", "")
     datetime_time_str = datetime_time_str.split(".")[0]
     datetime_time_str = datetime_time_str.replace(":", "-")
-    PTH_STATS_FILE = r"D:\Рабочий стол\stats" + datetime_date_str + "_" + NOISE_MODE + "_" + datetime_time_str + ".txt"
+    PTH_STATS_FILE = r"D:\Рабочий стол\stats " + ADD_TO_TITLE + datetime_date_str + "_" + NOISE_MODE + "_" + datetime_time_str + ".txt"
 
     if torch.cuda.is_available():
         device = torch.device('cuda')
@@ -71,6 +75,15 @@ def main():
         device = torch.device('cpu')
 
     train_options, hidden_config, noise_config = utils.load_options(PTH_OPTIONS_FILE)
+
+    print("MSG length: ", hidden_config.message_length)
+    print("Image size: ", hidden_config.H)
+    print("Layers coder: ", hidden_config.encoder_blocks)
+    # print("Layers discriminator: ", hidden_config.discriminator_blocks)
+    print("Layers decoder: ", hidden_config.decoder_blocks)
+
+    print("Noise config: ", noise_config)
+    print("Selected noise mode: ", NOISE_MODE)
 
     if NOISE_MODE == "crop":
         crop = Crop((CROP_HEIGHT_RATIO_RANGE_MIN, CROP_HEIGHT_RATIO_RANGE_MAX),
@@ -113,6 +126,7 @@ def main():
         noiser.remove_noise_layer(0)
 
     # noiser = Noiser(noise_config, device)
+
     checkpoint = torch.load(PTH_CHCKPNT_FILE)
     hidden_net = Hidden(hidden_config, device, noiser, None)
     utils.model_from_checkpoint(hidden_net, checkpoint)
@@ -127,12 +141,15 @@ def main():
         try:
             image = randomCrop(np.array(image_pil), hidden_config.H, hidden_config.W)
         except AssertionError:
-            # print(src_img_pth)
+            print(src_img_pth)
+            continue
+        except ValueError:
+            print(src_img_pth)
             continue
         try:
             image_tensor = TF.to_tensor(image).to(device)
         except ValueError:
-            # print(src_img_pth)
+            print(src_img_pth)
             continue
         image_tensor = image_tensor * 2 - 1  # transform from [0, 1] to [-1, 1]
         image_tensor.unsqueeze_(0)
@@ -153,7 +170,7 @@ def main():
         f.write(convert_msg_2_str(decoded_rounded))
         f.write('\n')
         f.close()
-        print(file + str(i))
+        # print(file + str(i))
         i += 1
 
 
@@ -175,9 +192,11 @@ def main():
     print(result)
 
     f = open(PTH_STATS_FILE, 'a')
-    f.write('DATA_BLOCK_FINISHED' + '\n')
+    f.write("DATA_BLOCK_FINISHED" + '\n')
     f.write('NOISE TYPE ' + NOISE_MODE + ' ' + str(NOISE_PARAM_1) + ' ' +
             str(NOISE_PARAM_2) + ' ' + str(NOISE_PARAM_3) + ' ' + str(NOISE_PARAM_4) + '\n')
+    f.write('Images evaluated\n')
+    f.write('{:.3f}'.format(counter) + '\n')
     f.write('MATH EXPECTATION\n')
     f.write('{:.8f}'.format(result))
     f.close()

@@ -1,14 +1,7 @@
 import datetime
-
 import numpy as np
 
-
-
-
-
 PTH_TO_SRC_FILE = "D:/Рабочий стол/stats2023-04-10_identity_13-45-17.txt"
-
-
 
 def parse_line(line):
     parts = line.split("\t")
