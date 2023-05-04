@@ -4,8 +4,8 @@ from noise_layers.identity import Identity
 from noise_layers.jpeg_compression import JpegCompression
 from noise_layers.quantization import Quantization
 
+# current layers max number = 8
 PROBABILITIES = (float(0.2), float(0.25), float(0.2), float(0.15), float(0.2), float(0.15), float(0.2), float(0.25))
-#
 
 
 def independent_apply(noise_layers,

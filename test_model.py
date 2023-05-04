@@ -117,7 +117,7 @@ def main():
     parser.add_argument('--options-file', '-o', default='options-and-config.pickle', type=str,
                         help='The file where the simulation options are stored.')
     parser.add_argument('--checkpoint-file', '-c', required=True, type=str, help='Model checkpoint file')
-    parser.add_argument('--batch-size', '-b', default=12, type=int, help='The batch size.')
+    # parser.add_argument('--batch-size', '-b', default=12, type=int, help='The batch size.')
     parser.add_argument('--source-image', '-s', required=True, type=str,
                         help='The image to watermark')
 

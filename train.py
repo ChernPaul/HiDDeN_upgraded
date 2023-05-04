@@ -42,12 +42,14 @@ def train(model: Hidden,
     # early stopping
     last_loss = 100
     # loss min difference value
-    delta = 0.001
+    delta = 0.0001
     # trigger times >= patience
-    patience_abs = 10
-    patience_improve = 10
+    patience_abs = 15
+    patience_improve = 20
+    patience_jumps = 7
     seq_trigger_times_abs = 0
     seq_trigger_times_imp = 0
+    jumps_trigger = 0
     min_loss_value = 100
     # early stopping
     for epoch in range(train_options.start_epoch, train_options.number_of_epochs + 1):
@@ -103,14 +105,37 @@ def train(model: Hidden,
                 first_iteration = False
 
         # early stopping block started
+
         current_loss = validation_losses['loss           '].avg
         print('The current loss:', current_loss)
+
+        if epoch % 15 == 0:
+            jumps_trigger = 0
+
+        if last_loss - current_loss < 0:
+            seq_trigger_times_imp += 1
+            if jumps_trigger >= patience_jumps:
+                print('trigger times for jumps:', jumps_trigger)
+                print('Early stopping!\n')
+                utils.log_progress(validation_losses)
+                logging.info('-' * 40)
+                utils.save_checkpoint(model, train_options.experiment_name, epoch,
+                                      os.path.join(this_run_folder, 'checkpoints'))
+                utils.write_losses(os.path.join(this_run_folder, 'validation.csv'), validation_losses, epoch,
+                                   time.time() - epoch_start)
+                break
         # last - current > delta means improvement
         if last_loss - current_loss <= delta:
             seq_trigger_times_abs += 1
-            print('trigger times:', seq_trigger_times_abs)
             if seq_trigger_times_abs >= patience_abs:
+                print('trigger times for delta:', seq_trigger_times_abs)
                 print('Early stopping!\n')
+                utils.log_progress(validation_losses)
+                logging.info('-' * 40)
+                utils.save_checkpoint(model, train_options.experiment_name, epoch,
+                                      os.path.join(this_run_folder, 'checkpoints'))
+                utils.write_losses(os.path.join(this_run_folder, 'validation.csv'), validation_losses, epoch,
+                                   time.time() - epoch_start)
                 break
         else:
             seq_trigger_times_abs = 0
@@ -118,7 +143,14 @@ def train(model: Hidden,
         if min_loss_value < current_loss:
             seq_trigger_times_imp += 1
             if seq_trigger_times_imp >= patience_improve:
+                print('trigger times for improve:', seq_trigger_times_imp)
                 print('Early stopping!\n')
+                utils.log_progress(validation_losses)
+                logging.info('-' * 40)
+                utils.save_checkpoint(model, train_options.experiment_name, epoch,
+                                      os.path.join(this_run_folder, 'checkpoints'))
+                utils.write_losses(os.path.join(this_run_folder, 'validation.csv'), validation_losses, epoch,
+                                   time.time() - epoch_start)
                 break
         else:
             seq_trigger_times_imp = 0

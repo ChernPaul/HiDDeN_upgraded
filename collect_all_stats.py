@@ -16,16 +16,18 @@ from noise_layers.dropout import Dropout
 from noise_layers.noiser import Noiser
 from test_model import centerCrop
 ARCH_NUMBER = '2'
-MSG_LEN = '96'
+MSG_LEN = '128'
 
-# PTH_IMAGES_DIRECTORY = r'D:\Рабочий стол\10000test'
-PTH_IMAGES_DIRECTORY = r'D:\Рабочий стол\1000test'
-ADD_TO_TITLE = "msg_" + MSG_LEN + "_a" + ARCH_NUMBER + "_1000_"
+IMAGE_QUANTITY = '_10000_'
+PTH_IMAGES_DIRECTORY = r'D:\Рабочий стол\10000test'
+# PTH_IMAGES_DIRECTORY = r'D:\Рабочий стол\1000test'
+ADD_TO_TITLE = "msg_" + MSG_LEN + "_a" + ARCH_NUMBER + IMAGE_QUANTITY
 PTH_OPTIONS_FILE = r"D:\Рабочий стол\exp1_data\arch" + ARCH_NUMBER + "\options-and-config_msg" + MSG_LEN + "_arch" + ARCH_NUMBER + ".pickle"
 PTH_CHCKPNT_FILE = r"D:\Рабочий стол\exp1_data\arch" + ARCH_NUMBER + "\identity_msg" + MSG_LEN + "--epoch-300.pyt"
 NOISE_MODE = "identity"  # identity crop cropout dropout and jpeg are available
 
-
+# PTH_OPTIONS_FILE = r"D:\Рабочий стол\runs_from_virt\tries_to improve\try_success\options-and-config.pickle"
+# PTH_CHCKPNT_FILE = r"D:\Рабочий стол\runs_from_virt\tries_to improve\try_success\for_conf--epoch-398.pyt"
 # crop
 CROP_HEIGHT_RATIO_RANGE_MIN = 0.2
 CROP_HEIGHT_RATIO_RANGE_MAX = 0.3
@@ -168,6 +170,8 @@ def main():
             image = randomCrop(np.array(image_pil), hidden_config.H, hidden_config.W)
         except AssertionError:
             # print(src_img_pth)
+            continue
+        except ValueError:
             continue
         try:
             image_tensor = TF.to_tensor(image).to(device)

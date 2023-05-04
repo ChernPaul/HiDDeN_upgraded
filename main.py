@@ -14,12 +14,15 @@ from noise_argparser import NoiseArgParser
 
 from train import train
 
-# new --name rwn_crop+cropout+dropout+jpeg --data-dir "D:\Рабочий стол\folder" --batch-size 8 --size 128 --message 32
-# continue --folder "C:\Users\Pavel\PycharmProjects\HiDDeN_upd\runs\rwn_crop+cropout+dropout+jpeg 2023.04.07--09-24-43"
-
+# new --name rwn_msg96_size128_arch1 --data-dir "D:\Рабочий стол\folder" --batch-size 8 --size 128 --message 96
+# --noise "crop((0.2,0.3),(0.4,0.5))+cropout((0.11,0.22),(0.33,0.44))+dropout(0.2,0.3)+jpeg()+sharp(0.1,0.2,0.3)+gauss(1,2,3)"
+# continue --folder "D:\Рабочий стол\runs_collected\identity_msg64_size128_arch4 2023.04.17--16-16-10"
+# new --name try_improve --data-dir "D:\Рабочий стол\folder" --batch-size 6 --size 256 --message 128 --epoch 400
+# continue  --folder  "C:\Users\Pavel\PycharmProjects\HiDDeN_upd\runs\try_improve 2023.04.27--20-07-46"
 def main():
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     print(torch.__version__)
+    print("Cuda is available: ", torch.cuda.is_available())
     parent_parser = argparse.ArgumentParser(description='Training of HiDDeN nets')
     subparsers = parent_parser.add_subparsers(dest='command', help='Sub-parser for commands')
     new_run_parser = subparsers.add_parser('new', help='starts a new run')
@@ -98,7 +101,7 @@ def main():
                                             use_discriminator=True,
                                             use_vgg=False,
                                             discriminator_blocks=3, discriminator_channels=64,
-                                            decoder_loss=1,
+                                            decoder_loss=1.0,
                                             encoder_loss=0.7,
                                             adversarial_loss=1e-3,
                                             enable_fp16=args.enable_fp16
