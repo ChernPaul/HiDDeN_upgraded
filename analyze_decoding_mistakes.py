@@ -1,7 +1,19 @@
 import datetime
 import numpy as np
 
-PTH_TO_SRC_FILE = "D:/Рабочий стол/stats2023-04-10_identity_13-45-17.txt"
+PTH_TO_SRC_FILE = "D:/Рабочий стол/bep_statsmsg_128_a2_10000_2023-05-03_identity_15-51-54.txt"
+
+def get_number_of_bit_errors(src_msg, dec_msg):
+    result = 0
+    for i in range(0, np.shape(src_msg)[0], 1):
+        if src_msg[i] != dec_msg[i]:
+            result += 1
+    return result
+
+
+def get_bits_processed(dec_msg):
+    return np.shape(dec_msg)[0]
+
 
 def parse_line(line):
     parts = line.split("\t")
@@ -52,6 +64,8 @@ f = open(PTH_TO_SRC_FILE, 'r')
 f.readline()
 diction_global = {}
 msg_count = 0
+total_count_of_errors = 0
+# total_count_of_bits_processed = 0
 while True:
     line = f.readline()
     if not line:
@@ -61,6 +75,8 @@ while True:
     # getting src_msg and enc_msg as arrays
     src_msg_arr, dec_msg_arr = parse_line(line)
     dict_temp = get_errors_dict(src_msg_arr, dec_msg_arr)
+    total_count_of_errors += get_number_of_bit_errors(src_msg_arr, dec_msg_arr)
+    # total_count_of_bits_processed += get_bits_processed(dec_msg_arr)
     for key in dict_temp.keys():
         try:
             diction_global[key] = diction_global[key] + dict_temp[key]
@@ -73,4 +89,6 @@ for key in diction_global.keys():
     f.write(str(key) +": " + str(diction_global[key]))
     f.write('\n')
 f.write("MSG count: " + str(msg_count) + "\n")
+f.write("Total count of errors: " + str(total_count_of_errors) + "\n")
+# f.write("Total count of bits processed: " + str(total_count_of_bits_processed) + "\n")
 f.close()
