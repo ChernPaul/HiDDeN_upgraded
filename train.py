@@ -108,7 +108,7 @@ def train(model: Hidden,
 
         current_loss = validation_losses['loss           '].avg
         print('The current loss:', current_loss)
-
+        print('The min loss:', min_loss_value)
         if epoch % 15 == 0:
             jumps_trigger = 0
 
