@@ -1,6 +1,6 @@
 import random
 import numpy as np
-from reedsolo import RSCodec
+from reedsolo import RSCodec, ReedSolomonError
 
 BITS_IN_ONE_BYTE = 8
 
@@ -86,3 +86,18 @@ def encode_batch_to_np_arrays(src_msg_len, batch_size, desired_output):
         tmp = np.reshape(tmp, (1, tmp.shape[0]))
         result = np.concatenate((result, tmp), axis=0)
     return result
+
+
+def decoded_msg_to_src_msg(extracted_np_array, src_msg_len, desired_output):
+    assert desired_output >= src_msg_len
+    errors_to_repair = (desired_output - src_msg_len) // 2
+    if desired_output != src_msg_len + 2 * errors_to_repair:
+        raise ValueError('Desired output cannot be matched. Check arguments')
+    codec_param = 2 * errors_to_repair
+    rsc = RSCodec(codec_param)
+    try:
+        decoded_noised = rsc.decode(bytearray(extracted_np_array.tobytes()))[0]
+        decoded_msg = view_bytearr_as_msg(decoded_noised)
+    except ReedSolomonError:
+        decoded_msg = extracted_np_array
+    return decoded_msg
